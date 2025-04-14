@@ -36,7 +36,7 @@ python src/train.py
 # Inference with the fine-tuned model
 python src/inference.py --prompt "Solve this math problem: If John has 5 apples and buys 3 more, how many does he have?"
 ```
-<img src="infer.png" alt="Inference example of finetuned model" style="height: 80px; width:100px;"/>
+<img src="infer.png" alt="Inference example of finetuned model"/>
 
 ## Project Structure
 
