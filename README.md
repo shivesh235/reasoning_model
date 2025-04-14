@@ -11,7 +11,7 @@ This implementation builds a reasoning model that:
 
 ## Features
 
-- Uses Llama 3.1-8B as the base model
+- Uses Mistral-7B-v0.1 as the base model
 - Implements efficient fine-tuning with UnslothAI and LoRA
 - Uses the GSM8K dataset for training on mathematical reasoning
 - Employs GRPO for reinforcement learning optimization
@@ -36,6 +36,7 @@ python src/train.py
 # Inference with the fine-tuned model
 python src/inference.py --prompt "Solve this math problem: If John has 5 apples and buys 3 more, how many does he have?"
 ```
+<img src="infer.png" alt="Inference example of finetuned model" style="height: 80px; width:100px;"/>
 
 ## Project Structure
 
