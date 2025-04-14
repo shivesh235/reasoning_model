@@ -1,6 +1,6 @@
 import argparse
 import torch
-from model import load_finetuned_model
+from src.model import load_finetuned_model
 
 # Initialize parser
 parser = argparse.ArgumentParser(description="Run inference with a fine-tuned reasoning model")
@@ -30,7 +30,9 @@ def format_prompt(prompt):
 2. Think through each step carefully
 3. Show all your work in a clear, organized manner
 4. Always verify your answer before finalizing it
-5. Provide your final answer in the format: <answer>X</answer> where X is the numerical value
+5. Provide your final answer in exactly this format: <answer>X</answer> where X is the numerical value. Do not use any other format.
+
+IMPORTANT: The final line of your response must contain only the answer in the format <answer>X</answer> where X is replaced with your numerical answer.
 
 Let me solve this step-by-step:"""
     
@@ -94,6 +96,21 @@ def extract_answer(response):
     match = re.search(r"<answer>(.*?)</answer>", response)
     if match:
         return match.group(1).strip()
+    
+    # Try to extract answer from "The correct answer is X" format
+    match = re.search(r"The correct answer is (\d+)", response)
+    if match:
+        return match.group(1).strip()
+    
+    # Try to find any number after "they have a total of" or similar phrases
+    match = re.search(r"total of (\d+)", response.lower())
+    if match:
+        return match.group(1).strip()
+    
+    # Try to find the last number in the text as a fallback
+    numbers = re.findall(r"\d+", response)
+    if numbers:
+        return numbers[-1]
     
     return None
 

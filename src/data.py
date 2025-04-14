@@ -62,7 +62,9 @@ def format_with_reasoning_prompt(example):
 2. Think through each step carefully
 3. Show all your work in a clear, organized manner
 4. Always verify your answer before finalizing it
-5. Provide your final answer in the format: <answer>X</answer> where X is the numerical value
+5. Provide your final answer in exactly this format: <answer>X</answer> where X is the numerical value. Do not use any other format.
+
+IMPORTANT: The final line of your response must contain only the answer in the format <answer>X</answer> where X is replaced with your numerical answer.
 
 Let me solve this step-by-step:"""
 

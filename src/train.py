@@ -5,8 +5,8 @@ import wandb
 from tqdm import tqdm
 import random
 import numpy as np
-from transformers import Trainer, TrainingArguments, default_data_collator
 from unsloth import FastLanguageModel
+from transformers import Trainer, TrainingArguments, default_data_collator
 from accelerate import Accelerator
 
 from model import load_base_model, create_lora_config, save_model
@@ -15,7 +15,7 @@ from rewards import extract_model_answer, combined_reward, extract_model_answer
 
 # Initialize parser
 parser = argparse.ArgumentParser(description="Train a reasoning model using GRPO")
-parser.add_argument("--model_name", type=str, default="meta-llama/Meta-Llama-3.1-8B", 
+parser.add_argument("--model_name", type=str, default="mistralai/Mistral-7B-v0.1", 
                     help="Base model to use")
 parser.add_argument("--max_samples", type=int, default=1000, 
                     help="Maximum number of training samples to use")
@@ -185,15 +185,28 @@ class GRPOTrainer:
                 # Compute rewards
                 rewards = torch.tensor(self.compute_rewards(responses, batch_answers), device=self.device)
                 
+                # Process responses for training
+                response_inputs = self.tokenizer(responses, return_tensors="pt", padding=True).to(self.device)
+                
                 # Save old policy logprobs
                 with torch.no_grad():
-                    old_logprobs = self.model.forward(responses).logprobs
+                    # Execute forward pass to get log probabilities
+                    outputs = self.model(
+                        input_ids=response_inputs["input_ids"],
+                        attention_mask=response_inputs["attention_mask"],
+                    )
+                    old_logprobs = outputs.logits.log_softmax(-1).mean()
                 
                 # Forward pass with current policy
-                current_outputs = self.model.forward(responses, labels=responses)
+                outputs = self.model(
+                    input_ids=response_inputs["input_ids"],
+                    attention_mask=response_inputs["attention_mask"],
+                    labels=response_inputs["input_ids"],
+                )
+                current_logprobs = outputs.logits.log_softmax(-1).mean()
                 
                 # Compute GRPO loss
-                policy_loss = self.compute_grpo_loss(old_logprobs, current_outputs.logprobs, rewards)
+                policy_loss = self.compute_grpo_loss(old_logprobs, current_logprobs, rewards)
                 
                 # Backward pass and optimization
                 self.accelerator.backward(policy_loss)
@@ -257,6 +270,9 @@ def main():
         dataset=messages,
         reference_answers=reference_answers
     )
+    
+    # Enable logits for Unsloth
+    os.environ['UNSLOTH_RETURN_LOGITS'] = '1'
     
     trainer.train()
 
